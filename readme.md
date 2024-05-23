@@ -15,3 +15,13 @@
 - sink processor: does not have shildren. Sends stream data directly to a kafka topic
 - High-level DSL: simple, descriptive (declarative?); applicable to most stream applications
 - Low-level Processor API: imperative, complex, rarely needed
+
+#### KStream vs KTable
+
+- stream: insert (append) only
+  - use for non-compacted data
+- table: upsert, more like db
+  - keyed by primary key
+  - update existing value
+  - delete key-value, if receiving null value
+  - use for compacted data
