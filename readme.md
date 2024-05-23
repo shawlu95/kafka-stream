@@ -25,3 +25,21 @@
   - update existing value
   - delete key-value, if receiving null value
   - use for compacted data
+  - write to a topic, optimize recovery time, save storage
+- a topic can be read as KStream or KTable, or GlobalKTable (similar to KTable)
+
+#### Log Compaction
+
+- huge improvement on performance
+- retain AT LEAST the last known value of a specific key in a partition
+- useful if you only need the snapshot instead of full history
+
+#### Cheat Sheet
+
+- two internal topics are created for each app: changelog, repartition
+- use predicate to split stream into branches (multiple streams)
+- MapValue turns each value into zero, one, or multiple values with the same key
+- SelectKey redefines the key of stream
+- stream marked for repartition if using: Map, FlatMap, SelectKey
+- avoid repartition: MapValues, FlatMapValues
+- table-stream duality: two representations, and can be converted into one another
