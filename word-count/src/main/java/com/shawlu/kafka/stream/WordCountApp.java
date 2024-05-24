@@ -1,4 +1,4 @@
-package com.shawlu.kafka.stream.starter.word.count;
+package com.shawlu.kafka.stream;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
@@ -11,7 +11,7 @@ import org.apache.kafka.streams.kstream.KTable;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class StreamsStarterApp {
+public class WordCountApp {
     public static void main(String[] args) {
         Properties config = new Properties();
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-word-count");
@@ -23,11 +23,11 @@ public class StreamsStarterApp {
         KStreamBuilder builder = new KStreamBuilder();
         KStream<String, String> input = builder.stream("word-count-input"); // name of topic
         KTable<String, Long> wc = input
-            .mapValues(x -> x.toLowerCase())
-            .flatMapValues(x -> Arrays.asList(x.split("\\W+"))) // split by one or more non-word
-            .selectKey((k, v) -> v) // set key, before group by
-            .groupByKey()
-            .count("counts"); // queryable store name
+                .mapValues(x -> x.toLowerCase())
+                .flatMapValues(x -> Arrays.asList(x.split("\\W+"))) // split by one or more non-word
+                .selectKey((k, v) -> v) // set key, before group by
+                .groupByKey()
+                .count("counts"); // queryable store name
 
         // key is string, value is long
         wc.to(Serdes.String(), Serdes.Long(), "word-count-output");
