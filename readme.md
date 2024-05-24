@@ -43,3 +43,8 @@
 - stream marked for repartition if using: Map, FlatMap, SelectKey
 - avoid repartition: MapValues, FlatMapValues
 - table-stream duality: two representations, and can be converted into one another
+
+#### Join
+
+- two sources must be co-partitioned (same number of partitions)
+- if one table is small, broadcast it by reading as GlobalKTable
