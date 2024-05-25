@@ -43,8 +43,18 @@
 - stream marked for repartition if using: Map, FlatMap, SelectKey
 - avoid repartition: MapValues, FlatMapValues
 - table-stream duality: two representations, and can be converted into one another
+- count: in stream, null values are ignored; in ktable, nulls are treated as delete (-1)
+- aggregate function takes: initializer, adder, serde (type), state store name
+- aggregate on ktable takes an additional **subtractor** to handle deletion (null)
+- reduce: output type must be same as inpt
+- peek: side effect, no impact on result, may execute multiple times, used for debugging, console logging, statistics collection
+- transform/transform values: low level API, rarely needed
 
-#### Join
+## Exaactly Once Semantics
 
-- two sources must be co-partitioned (same number of partitions)
-- if one table is small, broadcast it by reading as GlobalKTable
+- guaranteed only when both input and output are kafka (broker and client must be >= 0.11 version)
+- not guaranteed when external system is involved
+- messages from kafka topic are processed once
+- messages to kafka topic are delivered once (dedupped if retry)
+- producers are idempotent: if same message is sent twice or more (due to network failure), Kafka will keep only one copy
+- can write multiple messages to topic in **transaction** (all success, or all fail), same as database transaction.
