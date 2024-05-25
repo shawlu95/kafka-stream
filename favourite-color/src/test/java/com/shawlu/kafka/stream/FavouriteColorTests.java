@@ -1,6 +1,5 @@
 package com.shawlu.kafka.stream;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -8,8 +7,8 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
-import org.apache.kafka.streams.test.ConsumerRecordFactory;
-import org.apache.kafka.streams.test.OutputVerifier;
+import org.apache.kafka.streams.*;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,11 +19,8 @@ import java.util.Properties;
 public class FavouriteColorTests {
 
     TopologyTestDriver testDriver;
-
-    StringSerializer stringSerializer = new StringSerializer();
-
-    ConsumerRecordFactory<String, String> recordFactory =
-            new ConsumerRecordFactory<>(stringSerializer, stringSerializer);
+    TestInputTopic<String, String> inputTopic;
+    TestOutputTopic<String, Long> outputTopic;
 
     @Before
     public void setUpTopologyTestDriver() {
@@ -37,6 +33,11 @@ public class FavouriteColorTests {
         FavouriteColor app = new FavouriteColor();
         Topology topology = app.createTopology();
         testDriver = new TopologyTestDriver(topology, config);
+
+        inputTopic = testDriver.createInputTopic(
+                "favourite-colour-input", new StringSerializer(), new StringSerializer());
+        outputTopic = testDriver.createOutputTopic(
+                "favourite-colour-output", new StringDeserializer(), new LongDeserializer());
     }
 
     @After
@@ -44,33 +45,20 @@ public class FavouriteColorTests {
         testDriver.close();
     }
 
-    public void pushInput(String value) {
-        testDriver.pipeInput(recordFactory.create("favourite-colour-input", null, value));
-    }
-
-    public ProducerRecord<String, Long> readOutput(){
-        return testDriver.readOutput("favourite-colour-output", new StringDeserializer(), new LongDeserializer());
-    }
-
     @Test
     public void makeSureCountsAreCorrect(){
-        pushInput("stephane,blue");
-        ProducerRecord<String, Long> out1 = readOutput();
-        Assert.assertEquals("blue", out1.key());
-        Assert.assertEquals(1, out1.value().intValue());
+        inputTopic.pipeInput("stephane,blue");
 
-        pushInput("john,green");
-        ProducerRecord<String, Long> out2 = readOutput();
-        Assert.assertEquals("green", out2.key());
-        Assert.assertEquals(1, out2.value().intValue());
+        Assert.assertEquals(new KeyValue<>("blue", 1L), outputTopic.readKeyValue());
 
-        pushInput("stephane,red");
-        ProducerRecord<String, Long> out3 = readOutput();
-        Assert.assertEquals("blue", out3.key());
-        Assert.assertEquals(0, out3.value().intValue());
+        inputTopic.pipeInput("john,green");
+        Assert.assertEquals(new KeyValue<>("green", 1L), outputTopic.readKeyValue());
 
-        ProducerRecord<String, Long> out4 = readOutput();
-        Assert.assertEquals("red", out4.key());
-        Assert.assertEquals(1, out4.value().intValue());
+        inputTopic.pipeInput("stephane,red");
+        Assert.assertEquals(new KeyValue<>("blue", 0L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("red", 1L), outputTopic.readKeyValue());
+
+        inputTopic.pipeInput("alice,red");
+        Assert.assertEquals(new KeyValue<>("red", 2L), outputTopic.readKeyValue());
     }
 }

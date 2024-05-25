@@ -42,7 +42,7 @@ public class BankBalanceExactlyOnceApp {
         initialBalance.put("time", Instant.ofEpochMilli(0L).toString());
 
         KTable<String, JsonNode> bankBalance = bankTransactions
-                .groupByKey(Serialized.with(Serdes.String(), jsonSerde))
+                .groupByKey()
                 .aggregate(
                         () -> initialBalance,
                         (key, transaction, balance) -> newBalance(transaction, balance),

@@ -1,6 +1,5 @@
 package com.shawlu.kafka.stream;
 
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -10,8 +9,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-
-
 
 // Run the Kafka Streams application before running the producer.
 // This will be best for your learning

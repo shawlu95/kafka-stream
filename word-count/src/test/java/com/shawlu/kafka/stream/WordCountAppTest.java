@@ -1,15 +1,10 @@
 package com.shawlu.kafka.stream;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.TopologyTestDriver;
-import org.apache.kafka.streams.test.ConsumerRecordFactory;
-import org.apache.kafka.streams.test.OutputVerifier;
+import org.apache.kafka.streams.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,11 +15,8 @@ import java.util.Properties;
 public class WordCountAppTest {
 
     TopologyTestDriver testDriver;
-
-    StringSerializer stringSerializer = new StringSerializer();
-
-    ConsumerRecordFactory<String, String> recordFactory =
-            new ConsumerRecordFactory<>(stringSerializer, stringSerializer);
+    TestInputTopic<String, String> inputTopic;
+    TestOutputTopic<String, Long> outputTopic;
 
     @Before
     public void setUpTopologyTestDriver() {
@@ -37,6 +29,11 @@ public class WordCountAppTest {
         WordCountApp wordCountApp = new WordCountApp();
         Topology topology = wordCountApp.createTopology();
         testDriver = new TopologyTestDriver(topology, config);
+
+        inputTopic = testDriver.createInputTopic(
+                "word-count-input", new StringSerializer(), new StringSerializer());
+        outputTopic = testDriver.createOutputTopic(
+                "word-count-output", new StringDeserializer(), new LongDeserializer());
     }
 
     @After
@@ -44,36 +41,27 @@ public class WordCountAppTest {
         testDriver.close();
     }
 
-    public void pushNewInputRecord(String value) {
-        testDriver.pipeInput(recordFactory.create("word-count-input", null, value));
-    }
-
-    public ProducerRecord<String, Long> readOutput(){
-        return testDriver.readOutput("word-count-output", new StringDeserializer(), new LongDeserializer());
-    }
-
     @Test
     public void makeSureCountsAreCorrect(){
         String firstExample = "testing Kafka Streams";
-        pushNewInputRecord(firstExample);
-        OutputVerifier.compareKeyValue(readOutput(), "testing", 1L);
-        OutputVerifier.compareKeyValue(readOutput(), "kafka", 1L);
-        OutputVerifier.compareKeyValue(readOutput(), "streams", 1L);
-        Assert.assertEquals(readOutput(), null);
+        inputTopic.pipeInput(firstExample);
+        Assert.assertEquals(new KeyValue<>("testing", 1L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("kafka", 1L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("streams", 1L), outputTopic.readKeyValue());
 
         String secondExample = "testing Kafka again";
-        pushNewInputRecord(secondExample);
-        OutputVerifier.compareKeyValue(readOutput(), "testing", 2L);
-        OutputVerifier.compareKeyValue(readOutput(), "kafka", 2L);
-        OutputVerifier.compareKeyValue(readOutput(), "again", 1L);
+        inputTopic.pipeInput(secondExample);
+        Assert.assertEquals(new KeyValue<>("testing", 2L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("kafka", 2L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("again", 1L), outputTopic.readKeyValue());
     }
 
     @Test
     public void makeSureWordsBecomeLowercase(){
         String upperCaseString = "KAFKA kafka Kafka";
-        pushNewInputRecord(upperCaseString);
-        OutputVerifier.compareKeyValue(readOutput(), "kafka", 1L);
-        OutputVerifier.compareKeyValue(readOutput(), "kafka", 2L);
-        OutputVerifier.compareKeyValue(readOutput(), "kafka", 3L);
+        inputTopic.pipeInput(upperCaseString);
+        Assert.assertEquals(new KeyValue<>("kafka", 1L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("kafka", 2L), outputTopic.readKeyValue());
+        Assert.assertEquals(new KeyValue<>("kafka", 3L), outputTopic.readKeyValue());
     }
 }
