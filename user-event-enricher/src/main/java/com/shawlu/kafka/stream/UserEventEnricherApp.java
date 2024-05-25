@@ -6,21 +6,15 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.KStream;
 
 import java.util.Properties;
 
 public class UserEventEnricherApp {
-    public static void main(String[] args) {
 
-        Properties config = new Properties();
-        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "user-event-enricher-app");
-        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-
+    public Topology createTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
         // we get a global table out of Kafka. This table will be replicated on each Kafka Streams application
@@ -36,7 +30,6 @@ public class UserEventEnricherApp {
                         (key, value) -> key, /* map from the (key, value) of this stream to the key of the GlobalKTable */
                         (userPurchase, userInfo) -> "Purchase=" + userPurchase + ",UserInfo=[" + userInfo + "]"
                 );
-
         userPurchasesEnrichedJoin.to("user-purchases-enriched-inner-join");
 
         // we want to enrich that stream using a Left Join
@@ -52,11 +45,22 @@ public class UserEventEnricherApp {
                             }
                         }
                 );
-
         userPurchasesEnrichedLeftJoin.to("user-purchases-enriched-left-join");
+        return builder.build();
+    }
 
+    public static void main(String[] args) {
 
-        KafkaStreams streams = new KafkaStreams(builder.build(), config);
+        Properties config = new Properties();
+        config.put(StreamsConfig.APPLICATION_ID_CONFIG, "user-event-enricher-app");
+        config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+
+        UserEventEnricherApp app = new UserEventEnricherApp();
+
+        KafkaStreams streams = new KafkaStreams(app.createTopology(), config);
         streams.cleanUp(); // only do this in dev - not in prod
         streams.start();
 
