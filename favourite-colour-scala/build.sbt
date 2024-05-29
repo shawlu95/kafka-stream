@@ -1,7 +1,7 @@
 name := "favourite-colour-scala"
 organization        := "com.shawlu.kafka.stream"
 version             := "2.0.1-SNAPSHOT"
-scalaVersion := "2.12.3"
+scalaVersion := "2.13.14"
 
 // needed to resolve weird dependency
 libraryDependencies += "javax.ws.rs" % "javax.ws.rs-api" % "2.1" artifacts(

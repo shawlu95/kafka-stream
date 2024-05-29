@@ -4,7 +4,7 @@ How to set up the project
 - File > Project Structure > select Java 1.8
 - Run > Edit Configurations > Add sbt task > enter command `~run`, and assign a `$task_name`
 - Run > `$task_name` defined in previous step
-- Go to scala object, add Scala SDK, download version 2.12.3
+- Go to scala object, add Scala SDK, download version 2.13.14
 - Click "sbt" on the right-hand-side of the screen and click refresh button, to get rid of the warnings
 
 ```bash
