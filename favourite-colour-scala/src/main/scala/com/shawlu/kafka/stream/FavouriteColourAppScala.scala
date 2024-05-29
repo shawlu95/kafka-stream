@@ -20,9 +20,6 @@ object FavouriteColourAppScala {
     config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String.getClass)
     config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String.getClass)
 
-    // we disable the cache to demonstrate all the "steps" involved in the transformation - not recommended in prod
-    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0")
-
     val builder: StreamsBuilder = new StreamsBuilder
 
     // Step 1: We create the topic of users keys to colours
@@ -32,7 +29,9 @@ object FavouriteColourAppScala {
       // 1 - we ensure that a comma is here as we will split on it
       .filter((key: String, value: String) => value.contains(","))
       // 2 - we select a key that will be the user id (lowercase for safety)
-      .selectKey[String]((key: String, value: String) => value.split(",")(0).toLowerCase)
+      .selectKey[String](new KeyValueMapper[String, String, String] {
+        override def apply(key: String, value: String): String = value.split(",")(0).toLowerCase
+      })
       // 3 - we get the colour from the value (lowercase for safety)
       .mapValues[String](new ValueMapper[String, String] {
         override def apply(value: String): String =  { value.split(",")(1).toLowerCase }
@@ -54,7 +53,6 @@ object FavouriteColourAppScala {
       // 5 - we group by colour within the KTable
       .groupBy(
         (user: String, colour: String) => new KeyValue[String, String](colour, colour),
-        Serialized.`with`(stringSerde, stringSerde)
       )
       .count(Materialized.as[String, lang.Long, KeyValueStore[Bytes, Array[Byte]]]("CountsByColours")
         .withKeySerde(stringSerde)

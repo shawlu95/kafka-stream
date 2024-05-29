@@ -16,13 +16,13 @@ bin/zookeeper-server-start.sh config/zookeeper.properties
 bin/kafka-server-start.sh config/server.properties
 
 # create input topic with one partition to get full ordering
-bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic favourite-colour-input-scala
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic favourite-colour-input-scala
 
 # create intermediary log compacted topic
-bin/kafka-topics.sh --create --zookeeper localhost:2181  --replication-factor 1 --partitions 1 --topic user-keys-and-colours-scala --config cleanup.policy=compact
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic user-keys-and-colours-scala --config cleanup.policy=compact
 
 # create output log compacted topic
-bin/kafka-topics.sh --create --zookeeper localhost:2181  --replication-factor 1 --partitions 1 --topic favourite-colour-output-scala --config cleanup.policy=compact
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic favourite-colour-output-scala --config cleanup.policy=compact
 
 
 # launch a Kafka consumer
