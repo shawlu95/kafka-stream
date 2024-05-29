@@ -1,8 +1,19 @@
+## favourite-colour-scala
+
+How to set up the project
+- File > Project Structure > select Java 1.8
+- Run > Edit Configurations > Add sbt task > enter command `~run`, and assign a `$task_name`
+- Run > `$task_name` defined in previous step
+- Go to scala object, add Scala SDK, download version 2.12.3
+- Click "sbt" on the right-hand-side of the screen and click refresh button, to get rid of the warnings
+
 ```bash
 
-# start zookkeeper
+# optional: open a shell - zookeeper is at localhost:2181
+bin/zookeeper-server-start.sh config/zookeeper.properties
 
-# start kafka
+# open another shell - kafka is at localhost:9092
+bin/kafka-server-start.sh config/server.properties
 
 # create input topic with one partition to get full ordering
 bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic favourite-colour-input-scala
