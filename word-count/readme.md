@@ -32,3 +32,11 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
     --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
     --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
 ```
+
+## Run Fat Jar
+
+```bash
+mvn clean package
+
+java -jar target/word-count-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
